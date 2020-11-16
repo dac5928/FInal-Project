@@ -71,7 +71,7 @@ NMC_5.0 %>% ggplot(aes(x = irst, y = pec)) + geom_point() + aes(color = year)
 ## World Cities 
 
 
-My second data set will be the World Cities data-set from the DataComputing package. As my research question also relates to population, understanding which countries have the most populous cities.I found this data-set through our work with it during the DC exercises assignments. Althought we never deirectly utilized it, it is similar in structure to that of the ZipGeograpy data-set with the exception that it focuses on cities in countries other than the United States. As my research project has an international focus, it was important to utilize a data-set that reflected that focus. 
+My second data set will be the World Cities data-set from the DataComputing package. As my research question also relates to population, understanding which countries have the most populous cities.I found this data-set through our work with it during the DC exercises assignments. Although we never directly utilized it, it is similar in structure to that of the ZipGeography data-set with the exception that it focuses on cities in countries other than the United States. As my research project has an international focus, it was important to utilize a data-set that reflected that focus.This data-set was collected over the course of several years during the first two decades of the 21st century. The data was also collected by researchers who used census data, and other population studies to create this data-set. 
 
 ```{r}
 data("WorldCities")
@@ -81,7 +81,7 @@ data("WorldCities")
 WorldCities
 ```
 
-In the data-set, each case represents on city in a country for a certian date. Some of the variables I intend to use are the country abbreviation, the population, and "countryRegion" in order to create a chloropleth map of the data-set. I plan to use this resulting map to better understand the number of major trade locations in each country, and to determine if the number of cities correlates to the economic power of country. 
+In the data-set, each case represents on city in a country for a certain date. Some of the variables I intend to use are the country abbreviation, the population, and "countryRegion" in order to create a chloropleth map of the data-set. I plan to use this resulting map to better understand the number of major trade locations in each country, and to determine if the number of cities correlates to the economic power of country. 
 
 ```{r}
 WorldCities %>% summarise(n())
