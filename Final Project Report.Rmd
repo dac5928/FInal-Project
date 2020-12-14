@@ -1,0 +1,286 @@
+---
+title: "Final Project Report"
+name: "Daniel Chadourne"
+output: html_notebook
+---
+
+### Front Matter
+```{r, warning=FALSE, message=FALSE}
+### Clean Environment
+rm(list = ls())
+
+### Load Appropriate Packages
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(data.tree)
+library(mosaic)
+library(DataComputing)
+```
+
+## Guiding Question 
+
+The guiding question and the topic of my research project was on the global power-structure theory of "Preponderance". The basis of this theory is that there exists a state which is the dominant global power, and it is in constant competition with fellow nation-states. With recent relations between the US and other global super-powers I wanted to focus on how this dominant power arises. Is it through economics? Military strength? and how do we identify "competitors"? It is these questions that influenced the generation of my guiding question; How have economic, military, and population changes across the globe and across many years transformed the United States into the "global hegemony," and
+is this "hegemony" secure?
+
+## Challenge
+
+One challenge I had during this project was the generation of the choropleth maps. As the data is continuous I had to solve this problem by selecting specific years to analyze, but this limited which years I could look at without creating additional charts or plots.
+
+
+## Primary Data Set
+
+The primary data set that I utilized to help answer my question was the "National Material Capabilities" study by David Springer from the University of Michigan. The data set has also been updated over the years, with the version 3.0 update having been conducted by our own university, Penn State in 2005, and the most recent update having been conducted in 2017. The data-set is currently hosted by J Michael Greig and Andrew Enterline from the University of North Texas, and the Correlates of War Data Set Hosting Program.
+
+In the data-set, each case represents one country and 10 other attributes for a given year. These attributes include military expenditures, number of active servicemen in millions, a three-letter state abbreviation, the version of study in which the data was generated, the year, the iron and steel production of the country, the energy expenditures of the country, the total and urban populations of the country, and the Composite Index of National Capabilities Score for each country. This final variable is computed based on the six population, energy, military, and production variables, and it used to estimate how powerful each state/nation holds.  
+
+
+### National Material Capabilities Study Version 5.0
+
+Please download the csv file here and load it in the command below
+
+[linked phrase] (https://github.com/dac5928/Final-Project)
+```{r}
+### Please choose the NMC5.0 csv file here.
+NMC_5.0 <- read.csv(file.choose())
+```
+
+```{r}
+###This will display the data set
+str(NMC_5.0)
+```
+
+
+## Secondary Data Set
+
+My second data set was the World Cities data-set from the DataComputing package. As my research question also relates to population, understanding which countries have the most populous cities or trade-ports, I thought that this would be a grreat compliment to understanding economic strength of select countries. This data-set was collected over the course of several years during the first two decades of the 21st century. The data was also based on census data, and other population studies. In the data set, each case represents a city in a certain country. 
+
+## WorldCities Data Set from Kaplan's "Data Computing" 
+
+```{r}
+WorldCities <- WorldCities
+```
+
+```{r}
+###This will display the data set
+str(WorldCities)
+```
+
+
+## Military Strength or Economics?
+
+As outlined in my guiding question, my project focuses on the relationship between militasry strength, economic, and "power". It is this fact that I chose to initially look at the military power and economic power separately. 
+
+```{r}
+###This function will generate a mean of whatever input is chosen
+Mean_CINC <- function(x){
+  mean(x)
+}
+```
+
+```{r}
+###This chunk will determine the mean cinc of each country in the data set and add it to the table
+NMC_5.0 %>% 
+  mutate(x = cinc) %>% 
+  mutate(mean = Mean_CINC(x))
+```
+
+Looking at the mean CINC score for each country, it was obvious I needed to filter out which countries I would use in my report and how I would identify "competitors", therefor I chose to sample the countries to pick the top ten countries that had the highest CINC score.
+
+```{r, warning = FALSE, message = FALSE}
+###This chunk will filter out the countries to be chosen for analysis
+NMC_5.0 %>%
+  group_by(stateabb) %>% 
+  filter(year == 2011) %>% 
+  arrange(desc(cinc)) %>% head(10)
+```
+
+In the above chunk I found that that the top ten countries including the the US were China, India, Russia, Japan, Brazil, the Republic of Korea, Germany, the United Kingdom, and Mexico. It would be the data from these countries that would be used for the majority of my report.
+
+
+
+## Military Power in the current World Order
+
+First in order to gather the data I needed to create and identify trends, I needed to filter out the cases which related to the ten countries previously found. I did this through generating a new data frame called "Countries".
+
+```{r}
+Countries <- NMC_5.0 %>% 
+  filter(grepl("(MEX|ROK|BRA|JPN|IND|UKG|GMY|USA|CHN|RUS)", stateabb))
+```
+
+With this new data table I began with identifying the ratio of military spending to the number of military personnel in order to find the spending amount per soldier. This ratio would give a good estimate of how well each countries soldiers are equipped in comparison to the others. I chose to map these values against the total populations of each country. First I created these new variables, named "Per-Capita" and "Population"
+
+```{r, warning=FALSE, message=FALSE}
+Countries <- 
+  Countries %>%
+  mutate(Per_Capita = milex / milper) %>%
+  mutate(Population = tpop) 
+```
+
+Then with these new variables I plotted the relationship between them using the ggplot package.
+
+```{r, warning=FALSE, message=FALSE}
+###This plot will show the relationship between per-military personnel spending and population
+Countries %>% 
+  ggplot(aes(x = Per_Capita, y = Population, color = stateabb)) + 
+  geom_point() + 
+  xlim(0, 150000) + 
+  labs(title = 'Military Spending per Serviceman by Population') + 
+  xlab("Per-capita Spending")
+```
+
+As the plot above shows, while other superpowers have increased in population, they have not increased their military spending-to-military personnel ratio. While this may be the case, this does not factor in the fact that countries may be choosing to compete via grey-warzone-based tactics or through economics. This relationship also does not account for the fact that the number of major ports in a country may also be a factor in the strength of a states naval power. Therefore as a result I needed to look into the relationship between the countrys' economic power.
+
+Utilizing the Worldmap() function I then chose to map these variables based on their location on the globe in order to better visualize the distribution. In doing so however I encountered the problem that choropleth maps cannot plot continuous variables. Therefore, I had to once again filter my new data frame by year in order to see the distribution. 
+
+```{r}
+###This chunk will filter out the entries for the year of 2011
+Countries_2011 <- 
+  NMC_5.0 %>% 
+  filter(year == '2012') %>% 
+  rename(Military_Personel = milper) %>% 
+  rename(Military_Expenditure = milex)
+```
+
+With this new data frame I then mapped the world by the number of military personnel. 
+
+```{r, warning=FALSE, message=FALSE}
+WorldMap(Countries_2011, key = stateabb, fill = Military_Personel)
+
+```
+
+I then mapped the countries by military expenditures.
+
+```{r, warning=FALSE, message=FALSE}
+WorldMap(Countries_2011, key = stateabb, fill = Military_Expenditure)
+```
+
+As shown in each of the above plots, while the US is consistently one of the strongest countries, others such as China, and Russia have begun to reach parity and even surpass the US in individual measures. As discussed previously, it was evident that other factors must be at play when it comes to world power as the military strength of each does not always indicate the exact strength of a country. 
+
+
+## Understanding the Economics behind Global Power
+
+### Power through production
+
+In my exploration of the economics portion of this project, I needed to rename and edit the names of certain variable in order to make the variables easier to understand. This was achieved through several "rename()" functions, and mutations to create the new variables I required for my analysis. These new variables would primarily be per-capita ratios, which again would suggest the strength of each countries economy. 
+
+
+
+```{r}
+###This chunk will rename the variables as needed to make for easy reading
+Countries <- Countries %>% 
+  rename(Iron_Steel_Production = irst) %>% 
+  rename(Energy_Consumption_MW = pec) %>% 
+  rename(Total_Population = tpop) %>% 
+  rename(Urban_Population = upop) %>% 
+  mutate(Per_Capita_Energy_Consumption = Energy_Consumption_MW / Total_Population) %>%
+  mutate(Iron_Steel_Per_Capita_Production = Iron_Steel_Production / Total_Population)
+```
+
+After creating these new variables, I decided to plot new the per-capita iron and steel production and each countries per-capita energy consumption by population similarly to the previous military strength plot. This type of information would suggest that where there is higher production but lower energy consumption, labor is cheaper and there is greater ability to produce goods, whether these be low-value-added products or major tech industry materials. 
+
+
+```{r, warning=FALSE, message=FALSE}
+###This chunk will plot per-capita energy usage and iron and steel production values
+Countries %>%
+  ggplot(aes(x = Per_Capita_Energy_Consumption, y = Iron_Steel_Per_Capita_Production, color = stateabb)) + 
+  geom_point() + 
+  aes(shape = stateabb) + 
+  labs(title = 'Per-capita Iron and steel production by Energy consumption') + 
+  stat_smooth()
+```
+
+
+Looking at the same countries utilizing per-capita iron and steel production and energy consumption, we can see new trend form. While China is not out-spending the US, the country is out-producing the US and is doing so with less energy per-capita. This suggests that China’s is choosing to compete with the US in economic power and control rather than in military power. This also suggests that China is more likely to use grey-zone tactics when competing as they cannot out-spend the United States when it comes to military strength. This plot also exemplifies why the US sees major powers like China and India as threats to the US economy. The trend also makes sense in the context that the US corporations chose to move to other countries in order to take advantage of low-cost labor. This is evident in the fact that the US' curve begins to turn downward while China and the Republic of Korea begin to shift upwards dramatically. 
+
+Once again mapping the world based on the individual variable present in the NMC Data set, It becomes clear who is the world most powerful economy. However in order to plot these using the worldmap() function I once again needed to filter the data and rename certain variable in order to better understand what they represent based on the code-book for the study.
+
+```{r}
+Countries_2011 <- NMC_5.0 %>%
+  filter(year == '2012') %>% 
+  rename(Energy_Consumption_MW = pec) %>% 
+  rename( Iron_Steel_Production = irst)
+```
+
+```{r, warning=FALSE,message=FALSE}
+WorldMap(Countries_2011, key = stateabb, fill = Energy_Consumption_MW)
+```
+
+```{r,warning=FALSE, message=FALSE}
+WorldMap(Countries_2011, key = stateabb, fill = Iron_Steel_Production)
+```
+
+
+As it is shown in the above chloropleth maps, it is clear that while the US can easily over-power China and others with military strength, it cannot out-produce the US and in fact is the stronger economic power, and perhaps is the world foremost international economy. This is made even clearer via the use of the WorldCities data set from Kaplan's "DataComputing".
+
+
+### Trade and Major Cities
+
+Following this concept of economic strength, it seemed possible that Perhaps in the case of China, the strength comes from the major cities and industrial complexes contained there-in. Using the WorldCities data set, I mapped both the US and China by population of their major cities, however I wanted to see the breakdown by regions so I could identify possible major trade hubs.
+
+
+```{r}
+US <-
+WorldCities %>% 
+  filter(country == "US")
+```
+
+```{r}
+###This chunk creates a new data frame for the US cities
+US %>%
+ggplot(aes(y = population, x = lubridate::mdy(date))) + 
+  geom_point() + 
+  aes(color = region) + 
+  xlab("Year")
+```
+
+
+As you can see in the above plot, there is a higher distribution of the US population on the coasts of the country near New York and LA. While this is to be expected, this also indicates that the areas where the most economic activity is occurring is within these regions of the country, which therefore suggests that the US' economic power comes from it's ports and less-so the rest of the country. 
+
+Similarly when plotting the same information for China, the same trend occurs, with one slight difference.
+
+```{r}
+###This chunk creates a new data frame for the Chinese cities
+China <- 
+  WorldCities %>% 
+  filter(country == "CN") 
+```
+
+```{r}
+China%>% 
+  ggplot(aes(y = population, x = lubridate::mdy(date))) + 
+  geom_point() + 
+  aes(color = region) + 
+  xlab("Year")
+```
+In comparison to the US, a large number of cities in China are more heavily concentrated near the Pacific Ocean. This would suggest that while China has several major trade hubs, the distribution of economic success in the country is not as even and would also indicate that there are more trade-hubs in China than in the US. 
+
+Joining the two data frames above I have created a data frame with both smaller data sets.
+
+```{r, warning = FALSE, message = FALSE}
+###This chunk creates a new data frame for the Chinese cities and US cities
+Us_and_China <- 
+  US %>% 
+  full_join(China)
+```
+
+```{r}
+Us_and_China %>% 
+  ggplot(aes(y = population, x = lubridate::mdy(date))) + 
+  geom_point() + 
+  geom_line() + 
+  aes(color = country) + 
+  xlab("Year")
+```
+
+Looking at the two plots overlapped, it becomes clear that while not only does the US have less-populous trade ports, but also fewer cities with high populations. This therefore suggest that to be more economically "powerful," it must have port cities with high populations and significant growth over time. 
+
+
+## Key Takeaway
+
+Based on the my work it appears the US rose the title of “global hegemon" through military spending and a high level of technological advance when it came to its military equipment. This hegemony however will be challenged by China, as the trends suggest that while they may not be able to compete militarily, they are most certainly able to compete via economics. This results in a lack of security for the “hegemony” and suggests that the US should take actions to improve its financial standing. My main takeaway from this project is that while military strength is important, it is not merely the ability to use force but also the ability to produce that creates a “global hegemon.”
+
+
+
+
